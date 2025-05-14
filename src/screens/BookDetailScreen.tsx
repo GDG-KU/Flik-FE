@@ -7,421 +7,485 @@ import {
   TouchableOpacity,
   Modal,
   ScrollView,
+  Image,
 } from 'react-native';
+import {StackScreenProps} from '@react-navigation/stack';
+import {RootStackParamList} from '../../App';
+import BackButton from '../assets/back-button.svg';
+import MoreButton from '../assets/more-button.svg';
+import LikedButton from '../assets/liked-button.svg';
+import FireIcon from '../assets/fire-icon.svg';
+import EmptyLikeButton from '../assets/empty-like-button.svg';
 
-const BookDetailScreen = () => {
-  // 예시: 전체 책 진행도 "6/9"
-  const [progress] = useState('6/9');
-  const [readCount, totalCount] = progress.split('/');
-  const ratio = parseInt(readCount, 10) / parseInt(totalCount, 10) || 0;
+const mockBook = {
+  cover: 'https://image.yes24.com/goods/12345678/XL', // 임시 이미지
+  title: '날개',
+  author: '이상',
+  totalPages: 200,
+  currentPage: 123,
+  date: '2025.04.21',
+};
 
-  // 현재 며칠째 읽는 중인지 (기본값 예: 8일)
-  const [currentDay, setCurrentDay] = useState(8);
+const mockChallenge = {
+  dDay: 23,
+  goal: '4주 안에 완독하기',
+  totalReads: 28,
+  currentReads: 5,
+};
 
-  // Bottom Sheet 표시 여부
-  const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
-  const openBottomSheet = () => setBottomSheetVisible(true);
-  const closeBottomSheet = () => setBottomSheetVisible(false);
+const mockLikedPages = [
+  {page: 8, text: '박제가 되어버린 천재를 아시오?'},
+  {
+    page: 16,
+    text: '나는 내 자신에게 한없는 애정을 느끼면서, 한없이 나를 학대하였다. 나는 내 자신에게 한없는 애정을 느끼면서, 한없이 나를 학...',
+  },
+  {page: 10, text: '우하하하'},
+];
+
+type Props = StackScreenProps<RootStackParamList, 'BookDetail'>;
+
+export default function BookDetailScreen({route, navigation}: Props) {
+  const {title, author, cover} = route.params;
+  // 임시 데이터(페이지, 날짜 등은 mockBook에서 유지)
+  const mockBook = {
+    cover: cover || 'https://image.yes24.com/goods/12345678/XL',
+    title: title,
+    author: author,
+    totalPages: 200,
+    currentPage: 123,
+    date: '2025.04.21',
+  };
+  const [progress] = useState(`${mockBook.currentPage}/${mockBook.totalPages}`);
+  const ratio = mockBook.currentPage / mockBook.totalPages;
+  const [showAll, setShowAll] = useState(false);
+  const totalRounds = mockChallenge.totalReads;
+  const currentRound = mockChallenge.currentReads;
+  const rounds = Array.from({length: totalRounds}, (_, i) => i + 1);
+  const roundsToShow = showAll ? rounds : rounds.slice(0, 7);
 
   return (
     <SafeAreaView style={styles.container}>
       {/* 상단 헤더 */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>책 이름</Text>
+      <View style={styles.headerRow}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <BackButton />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>상세보기</Text>
+        <TouchableOpacity>
+          <MoreButton />
+        </TouchableOpacity>
       </View>
-
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* 표지 중앙 배치 */}
+        {/* 표지 */}
         <View style={styles.coverWrapper}>
-          <View style={styles.bookCover}>
-            {/* 진행도 배지 (표지 우측 하단) */}
-            <View style={styles.progressBadge}>
-              <Text style={styles.progressBadgeText}>{progress}</Text>
-            </View>
-            {/* 진행도 막대 (표지 하단) */}
-            <View style={styles.progressBarContainer}>
-              <View
-                style={[styles.progressBarFill, {width: `${ratio * 100}%`}]}
-              />
-            </View>
+          <Image source={{uri: mockBook.cover}} style={styles.bookCoverImg} />
+        </View>
+        {/* 제목 */}
+        <Text style={styles.bookTitle}>{mockBook.title}</Text>
+        {/* 저자, 총 페이지 */}
+        <Text style={styles.bookAuthor}>
+          {mockBook.author} | 총 {mockBook.totalPages} 페이지
+        </Text>
+        {/* 날짜, 진행 바 */}
+        <View
+          style={{
+            width: 332,
+            height: 62,
+            marginTop: 12,
+            borderRadius: 10,
+            alignSelf: 'center',
+            backgroundColor: '#F8F9FB',
+            justifyContent: 'center',
+            marginBottom: 12,
+          }}>
+          <View style={styles.progressBarContainer}>
+            <View
+              style={[styles.progressBarFill, {width: `${ratio * 100}%`}]}
+            />
+          </View>
+          <View style={styles.progressRow}>
+            <Text style={styles.progressDate}>{mockBook.date}</Text>
+            <Text style={styles.progressPage}>
+              {mockBook.currentPage} / {mockBook.totalPages} 페이지
+            </Text>
           </View>
         </View>
-
-        {/* 제목 & 저자 (가운데 정렬) */}
-        <Text style={styles.bookTitle}>도널드 노먼의 사용자 중심 디자인</Text>
-        <Text style={styles.bookAuthor}>
-          피터 틸, 블레이크 매디스티 | 한국경제신문
-        </Text>
-
-        {/* 목표 관리 버튼 (오른쪽 정렬) */}
-        <View style={styles.goalManageWrapper}>
-          <TouchableOpacity style={styles.goalManageButton}>
-            <Text style={styles.goalManageButtonText}>목표 관리</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* "8일째 읽고 있어요!" (Pill 모양) + 6일 윈도우 표시 */}
-        <View style={styles.weeklyContainer}>
-          <TouchableOpacity
-            onPress={openBottomSheet}
-            style={styles.currentDayPill}>
-            <Text style={styles.currentDayPillText}>
-              {currentDay}일째 읽고 있어요!
-            </Text>
-            {/* 한 줄(6개)만 표시, currentDay가 포함된 범위 */}
-            <View style={styles.weekCircles}>
-              {renderSingleRow(currentDay, setCurrentDay)}
+        {/* 이어서 읽기 버튼 */}
+        <TouchableOpacity
+          style={styles.readButton}
+          onPress={() =>
+            navigation.navigate('Reading', {
+              title: mockBook.title,
+              author: mockBook.author,
+              thumbnail: mockBook.cover,
+            })
+          }>
+          <Text style={styles.readButtonText}>▶ 이어서 읽기</Text>
+        </TouchableOpacity>
+        <View style={{backgroundColor: '#F8F9FB'}}>
+          <View style={styles.challengeCardCustom}>
+            <Text style={styles.challengeTitleCustom}>챌린지</Text>
+            <View style={styles.challengeRowCustom}>
+              <FireIcon width={18} height={18} />
+              <Text style={styles.challengeDDayCustom}>
+                D-{mockChallenge.dDay}
+              </Text>
+              <Text style={styles.challengeGoalCustom}>
+                {mockChallenge.goal}
+              </Text>
             </View>
+            <Text style={styles.challengeProgressCustom}>
+              <Text style={styles.challengeProgressNumCustom}>
+                {currentRound}
+              </Text>{' '}
+              / {totalRounds} 회 독서 완료
+            </Text>
+            <View style={styles.challengeCirclesGridCustom}>
+              {Array.from({length: showAll ? 4 : 1}).map((_, rowIdx) => (
+                <View key={rowIdx} style={styles.challengeCirclesRowCustom}>
+                  {rounds.slice(rowIdx * 7, rowIdx * 7 + 7).map(n => {
+                    if (n < currentRound) {
+                      return (
+                        <View key={n} style={styles.challengeCircleDoneCustom}>
+                          <Text style={styles.challengeCheckCustom}>✓</Text>
+                        </View>
+                      );
+                    } else if (n === currentRound) {
+                      return (
+                        <View
+                          key={n}
+                          style={styles.challengeCircleCurrentCustom}>
+                          <Text style={styles.challengeCurrentNumCustom}>
+                            {n}
+                          </Text>
+                        </View>
+                      );
+                    } else {
+                      return (
+                        <View
+                          key={n}
+                          style={styles.challengeCircleFutureCustom}>
+                          <Text style={styles.challengeFutureNumCustom}>
+                            {n}
+                          </Text>
+                        </View>
+                      );
+                    }
+                  })}
+                </View>
+              ))}
+            </View>
+            <TouchableOpacity
+              style={styles.challengeShowAllBtnCustom}
+              onPress={() => setShowAll(v => !v)}>
+              <Text style={styles.challengeShowAllTextCustom}>
+                {showAll ? '접기 ∧' : '전체보기 ∨'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {/* 좋아요한 페이지 */}
+          <View style={styles.likedPagesRow}>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <EmptyLikeButton />
+              <Text style={styles.likedPagesTitle}>좋아요한 페이지</Text>
+            </View>
+            <Text style={styles.likedPagesCount}>
+              총 {mockLikedPages.length} 페이지
+            </Text>
+          </View>
+          <View style={styles.likedPagesCardsGrid}>
+            {mockLikedPages.map((item, idx) => (
+              <View key={idx} style={styles.likedPageCardGrid}>
+                <View style={styles.likedPageCardHeader}>
+                  <Text style={styles.likedPageCardPage}>
+                    {item.page} 페이지
+                  </Text>
+                  <LikedButton />
+                </View>
+                <Text style={styles.likedPageCardText}>{item.text}</Text>
+              </View>
+            ))}
+          </View>
+          <TouchableOpacity style={styles.challengeGiveupBtn}>
+            <Text style={styles.challengeGiveupBtnText}>챌린지 포기하기</Text>
           </TouchableOpacity>
-        </View>
-
-        {/* 하단 기타 정보 (예시) */}
-        <View style={styles.bottomInfoContainer}>
-          <Text style={styles.bottomInfoText}>
-            해당 도서에서 저장한 페이지가 없습니다
-          </Text>
         </View>
       </ScrollView>
-
-      {/* Bottom Sheet (1~29 동그라미 + 'box') */}
-      <Modal
-        visible={bottomSheetVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={closeBottomSheet}>
-        <TouchableOpacity
-          style={styles.overlay}
-          activeOpacity={1}
-          onPress={closeBottomSheet}
-        />
-        <View style={styles.bottomSheet}>
-          {/* 왼쪽 정렬 */}
-          <Text style={styles.bottomSheetTitle}>
-            {currentDay}일째 읽고 있어요!
-          </Text>
-
-          <View style={styles.dayCirclesContainer}>
-            {renderDayCircles(currentDay, setCurrentDay)}
-          </View>
-
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={closeBottomSheet}>
-            <Text style={styles.closeButtonText}>완료</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
-};
-
-/**
- * 주 화면: 6개짜리 윈도우를 구해 currentDay를 포함한 범위를 표시
- * 예) currentDay=2 => 1..6, currentDay=10 => 7..12
- * 각 day가 currentDay 이하이면 초록색+체크, 그렇지 않으면 숫자
- */
-function renderSingleRow(
-  currentDay: number,
-  setCurrentDay: (day: number) => void,
-) {
-  const days = getDaysInWindow(currentDay); // 6일 범위
-  return days.map(day => {
-    if (day <= currentDay) {
-      // 초록색+체크
-      return (
-        <TouchableOpacity
-          key={day}
-          style={[styles.dayCircle, styles.dayCircleCompleted]}
-          onPress={() => setCurrentDay(day)}>
-          <Text style={styles.checkMark}>✓</Text>
-        </TouchableOpacity>
-      );
-    } else {
-      // 숫자
-      return (
-        <TouchableOpacity
-          key={day}
-          style={styles.dayCircle}
-          onPress={() => setCurrentDay(day)}>
-          <Text style={styles.dayCircleText}>{day}</Text>
-        </TouchableOpacity>
-      );
-    }
-  });
 }
-
-/**
- * Bottom Sheet: 1~29 + 'box'
- *  - currentDay 이하 => 초록색+체크
- *  - currentDay 초과 => 숫자
- *  - 'box' => 상자 모양
- */
-function renderDayCircles(
-  currentDay: number,
-  setCurrentDay: (day: number) => void,
-) {
-  const numberArray = Array.from({length: 29}, (_, i) => i + 1);
-  const items: (number | string)[] = [...numberArray, 'box'];
-
-  return items.map(item => {
-    if (item === 'box') {
-      return (
-        <View style={styles.dayCircle} key="box">
-          <View style={styles.boxShape} />
-        </View>
-      );
-    } else {
-      const dayNumber = item as number;
-      if (dayNumber <= currentDay) {
-        return (
-          <TouchableOpacity
-            key={dayNumber}
-            style={[styles.dayCircle, styles.dayCircleCompleted]}
-            onPress={() => setCurrentDay(dayNumber)}>
-            <Text style={styles.checkMark}>✓</Text>
-          </TouchableOpacity>
-        );
-      } else {
-        return (
-          <TouchableOpacity
-            key={dayNumber}
-            style={styles.dayCircle}
-            onPress={() => setCurrentDay(dayNumber)}>
-            <Text style={styles.dayCircleText}>{dayNumber}</Text>
-          </TouchableOpacity>
-        );
-      }
-    }
-  });
-}
-
-/**
- * getDaysInWindow:
- *  currentDay가 포함된 6일 범위를 계산.
- *  예) currentDay=2 => 1..6, currentDay=10 => 7..12
- *  - start = currentDay - 3
- *  - end = start + 5 (총 6일)
- *  - 범위 밖이면 1..30 범위 내로 조정
- */
-function getDaysInWindow(currentDay: number): number[] {
-  let start = currentDay - 3;
-  if (start < 1) {
-    start = 1;
-  }
-  let end = start + 5; // 6개
-  if (end > 30) {
-    end = 30;
-    start = end - 5; // 다시 6개 범위 보장
-  }
-
-  const days = [];
-  for (let i = start; i <= end; i++) {
-    days.push(i);
-  }
-  return days;
-}
-
-export default BookDetailScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#fff',
   },
-  /* 상단 헤더 */
-  header: {
-    height: 44,
+  headerRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    height: 48,
+    paddingHorizontal: 12,
+    justifyContent: 'space-between',
+    borderBottomWidth: 0,
+    marginBottom: 4,
   },
   headerTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
+    color: '#222',
   },
   scrollContainer: {
     paddingBottom: 40,
   },
-  /* 표지 중앙 배치 */
   coverWrapper: {
-    marginTop: 16,
+    marginTop: 10,
     alignItems: 'center',
   },
-  bookCover: {
-    width: 162,
-    height: 216,
-    borderRadius: 12,
-    backgroundColor: '#00B1A7',
-    position: 'relative',
-    overflow: 'hidden',
+  bookCoverImg: {
+    width: 144,
+    height: 192,
+    borderRadius: 10,
+    marginBottom: 20,
   },
-  /* 진행도 배지 */
-  progressBadge: {
-    position: 'absolute',
-    bottom: 8,
-    right: 8,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#00B1A7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  progressBadgeText: {
-    color: '#00B1A7',
-    fontSize: 12,
+  bookTitle: {
+    height: 56,
+    fontSize: 20,
     fontWeight: '600',
+    lineHeight: 28,
+    color: '#000',
+    textAlign: 'center',
   },
-  /* 진행도 막대 (표지 하단) */
+  bookAuthor: {
+    fontSize: 14,
+    lineHeight: 22,
+    color: '#757575',
+    textAlign: 'center',
+  },
+  progressRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 2,
+    marginHorizontal: 15,
+  },
+  progressDate: {
+    fontSize: 12,
+    color: '#757575',
+    opacity: 0.8,
+    lineHeight: 22,
+  },
+  progressPage: {
+    fontSize: 12,
+    color: '#1A1A1A',
+    opacity: 0.8,
+    lineHeight: 22,
+  },
   progressBarContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 6,
-    backgroundColor: '#D9D9D9',
+    height: 8,
+    backgroundColor: '#E6E6E6',
+    borderRadius: 4,
+    marginHorizontal: 32,
+    marginTop: 12,
+    overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
     backgroundColor: '#00B1A7',
+    borderRadius: 4,
   },
-
-  /* 책 제목 & 저자 */
-  bookTitle: {
-    marginTop: 16,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333333',
-    textAlign: 'center',
-  },
-  bookAuthor: {
-    marginTop: 4,
-    fontSize: 14,
-    color: '#666666',
-    textAlign: 'center',
-  },
-
-  /* 목표 관리 버튼 (오른쪽 정렬) */
-  goalManageWrapper: {
-    marginTop: 12,
-    paddingHorizontal: 16,
-    alignItems: 'flex-end',
-  },
-  goalManageButton: {
+  readButton: {
+    height: 44,
+    width: 332,
+    flexDirection: 'row',
+    alignSelf: 'center',
+    alignItems: 'center',
     backgroundColor: '#00B1A7',
     borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    justifyContent: 'center',
+    marginTop: 8,
+    marginBottom: 20,
   },
-  goalManageButtonText: {
-    color: '#FFFFFF',
+  readButtonText: {
+    color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+    marginLeft: 4,
+    lineHeight: 22,
   },
-
-  /* "8일째 읽고 있어요!" + 6개 윈도우 */
-  weeklyContainer: {
-    marginTop: 20,
-    paddingHorizontal: 16,
+  challengeCardCustom: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 18,
+    margin: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: '#F0F1F3',
+  },
+  challengeTitleCustom: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000',
+    lineHeight: 22,
+    marginBottom: 4,
+  },
+  challengeRowCustom: {
+    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 2,
   },
-  currentDayPill: {
-    backgroundColor: '#E6F7F7',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginBottom: 16,
+  challengeDDayCustom: {
+    color: '#00B1A7',
+    fontWeight: '500',
+    marginLeft: 4,
+    marginRight: 8,
+    fontSize: 12,
+    opacity: 0.8,
   },
-  currentDayPillText: {
-    fontSize: 14,
-    fontWeight: '600',
+  challengeGoalCustom: {
+    color: '#757575',
+    fontSize: 12,
+    opacity: 0.8,
+    lineHeight: 22,
+  },
+  challengeProgressCustom: {
+    fontSize: 12,
+    color: '#2B4453',
+    opacity: 0.8,
+    lineHeight: 22,
+  },
+  challengeProgressNumCustom: {
     color: '#00B1A7',
   },
-  weekCircles: {
+  challengeCirclesGridCustom: {
+    marginTop: 10,
+    marginBottom: 10,
+    gap: 5,
+  },
+  challengeCirclesRowCustom: {
     flexDirection: 'row',
-  },
-
-  /* 하단 정보 */
-  bottomInfoContainer: {
-    marginTop: 24,
-    paddingHorizontal: 16,
-  },
-  bottomInfoText: {
-    fontSize: 14,
-    color: '#999999',
-    textAlign: 'center',
-  },
-
-  /* Bottom Sheet */
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  bottomSheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 16,
-  },
-  bottomSheetTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 16,
-    color: '#333333',
-    alignSelf: 'flex-start', // 왼쪽 정렬
-  },
-  dayCirclesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'center',
-    marginBottom: 16,
+    gap: 18,
+    marginBottom: 10,
   },
-  /* 공통 동그라미 스타일 */
-  dayCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: '#EAEAEA',
+  challengeCircleDoneCustom: {
+    width: 27,
+    height: 27,
+    borderRadius: 160,
+    backgroundColor: '#9E9E9E',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: 6,
   },
-  /* 완료된(현재일 이하) 동그라미: 초록색 배경 + 체크 */
-  dayCircleCompleted: {
-    backgroundColor: '#00B1A7',
-    borderColor: '#00B1A7',
-  },
-  dayCircleText: {
-    fontSize: 14,
-    color: '#666666',
-  },
-  checkMark: {
-    color: '#FFFFFF',
+  challengeCheckCustom: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
-  closeButton: {
+  challengeCircleCurrentCustom: {
+    width: 27,
+    height: 27,
+    borderRadius: 160,
     backgroundColor: '#00B1A7',
-    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  challengeCurrentNumCustom: {
+    color: '#F5F6F8',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  challengeCircleFutureCustom: {
+    width: 27,
+    height: 27,
+    borderRadius: 160,
+    backgroundColor: '#DBDFE4',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  challengeFutureNumCustom: {
+    color: '#F5F6F8',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  challengeShowAllBtnCustom: {
+    alignSelf: 'center',
+    marginTop: 2,
+  },
+  challengeShowAllTextCustom: {
+    color: '#757575',
+    opacity: 0.8,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  likedPagesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: 23,
+    marginBottom: 7,
+    marginTop: 14,
+  },
+  likedPagesTitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#1A1A1A',
+    opacity: 0.8,
+    marginLeft: 4,
+  },
+  likedPagesCount: {
+    fontSize: 12,
+    color: '#757575',
+    opacity: 0.8,
+  },
+  likedPagesCardsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: 16,
+    marginBottom: 16,
+    gap: 12,
+  },
+  likedPageCardGrid: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    borderColor: '#EEEEEE',
+    borderWidth: 1,
+    padding: 12,
+    width: '48%',
+    height: 175,
+    marginBottom: 12,
+  },
+  likedPageCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  likedPageCardPage: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#757575',
+    opacity: 0.8,
+    lineHeight: 22,
+  },
+  likedPageCardText: {
+    fontSize: 14,
+    lineHeight: 22,
+    color: '#000',
+  },
+  challengeGiveupBtn: {
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 32,
     paddingHorizontal: 24,
     paddingVertical: 10,
-    alignSelf: 'center',
+    borderRadius: 8,
+    backgroundColor: '#F7F7F7',
   },
-  closeButtonText: {
-    color: '#FFFFFF',
+  challengeGiveupBtnText: {
+    color: '#BDBDBD',
     fontSize: 14,
     fontWeight: '600',
-  },
-  /* 상자 모양 아이콘 (예시) */
-  boxShape: {
-    width: 16,
-    height: 16,
-    backgroundColor: '#00B1A7',
+    lineHeight: 22,
   },
 });

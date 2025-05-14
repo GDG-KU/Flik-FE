@@ -1,233 +1,343 @@
-import React, { useState, useRef } from 'react';
+// src/screens/ReadingScreen.tsx
+import React, {useState} from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Dimensions,
   TouchableOpacity,
-  Image,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-  ScrollView,
 } from 'react-native';
-import { StackScreenProps } from '@react-navigation/stack';
-import { RootStackParamList } from '../../App';
-import { TapGestureHandler, State as GestureState } from 'react-native-gesture-handler';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {StackScreenProps} from '@react-navigation/stack';
+import {RootStackParamList} from '../../App';
+import BackButton from '../assets/back-button.svg';
+import EmptyHeart from '../assets/empty-like-button-white.svg';
+import FullHeart from '../assets/liked-button.svg';
+import LeftArrow from '../assets/left-arrow.svg';
+import RightArrow from '../assets/right-arrow.svg';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const {width: SCREEN_WIDTH} = Dimensions.get('window');
+const HEADER_HEIGHT = 150;
+const FOOTER_HEIGHT = 100;
 
-const PAGES = [
-  "첫 번째 페이지 내용\n\n좌우 스와이프 해보세요.",
-  "두 번째 페이지 내용\n\n상/하단 바는 탭으로 숨기거나 표시.",
-  "세 번째 페이지 내용\n\n진행 바는 현재 페이지를 반영.",
-];
+// 더미값
+const totalPages = 10;
+const initialPage = 0;
 
 type Props = StackScreenProps<RootStackParamList, 'Reading'>;
 
-const ReadingScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { title: BOOK_TITLE, author: BOOK_AUTHOR, thumbnail: BOOK_THUMBNAIL } = route.params;
-  const [showBars, setShowBars] = useState(true);
-  const [currentPage, setCurrentPage] = useState(0);
+export default function ReadingScreen({route, navigation}: Props) {
+  const {title, author} = route.params;
+  const [page, setPage] = useState(initialPage);
+  const [showUI, setShowUI] = useState(false);
+  const [likedPages, setLikedPages] = useState<number[]>([]);
+  const [sliderWidth, setSliderWidth] = useState(0); // 슬라이더 트랙 width
+  const thumbDiameter = 20;
+  const movableWidth = sliderWidth - thumbDiameter;
 
-  const scrollViewRef = useRef<ScrollView>(null);
-
-  const onScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetX = e.nativeEvent.contentOffset.x;
-    const pageIndex = Math.round(offsetX / SCREEN_WIDTH);
-    setCurrentPage(pageIndex);
+  const goPrev = () => page > 0 && setPage(p => p - 1);
+  const goNext = () => {
+    if (page < totalPages - 1) setPage(p => p + 1);
+    else navigation.replace('ReadingGoal', {title, author});
   };
+  const toggleLike = () =>
+    setLikedPages(arr =>
+      arr.includes(page) ? arr.filter(x => x !== page) : [...arr, page],
+    );
 
-  // ScrollView 영역에만 탭 제스처 적용 (배경 탭 시 showBars 토글)
-  const onTapHandlerStateChange = (event: any) => {
-    if (event.nativeEvent.state === GestureState.END) {
-      setShowBars(prev => !prev);
-    }
-  };
-
-  // 점선 진행바 계산
-  const segmentCount = PAGES.length;
-  const segmentSpacing = 4;
-  const totalSpacing = segmentSpacing * (segmentCount - 1);
-  const segmentWidth = (SCREEN_WIDTH - totalSpacing) / segmentCount;
+  // thumb 위치 계산
+  const fillWidth = ((page + 1) / totalPages) * sliderWidth;
+  const thumbLeft = fillWidth - thumbDiameter / 2;
 
   return (
-    <View style={styles.container}>
-      {/* ScrollView 영역을 TapGestureHandler로 감싸서 탭하면 showBars 토글 */}
-      <TapGestureHandler onHandlerStateChange={onTapHandlerStateChange}>
-        <View style={{ flex: 1 }}>
-          <ScrollView
-            ref={scrollViewRef}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={onScrollEnd}
-          >
-            {PAGES.map((page, index) => (
-              <View key={index} style={styles.pageContainer}>
-                <Text style={styles.pageText}>{page}</Text>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      </TapGestureHandler>
-
-      {/* 진행 바 (ScrollView 위에 절대 배치) */}
-      <View style={styles.progressContainer}>
-        {PAGES.map((_, i) => {
-          const active = i <= currentPage;
-          return (
+    <SafeAreaView style={styles.flex}>
+      {/* 1) 상단 도트 바 */}
+      {!showUI && (
+        <View style={styles.dotBar}>
+          {Array.from({length: totalPages}).map((_, i) => (
             <View
               key={i}
               style={[
-                styles.segment,
-                {
-                  width: segmentWidth,
-                  marginRight: i < segmentCount - 1 ? segmentSpacing : 0,
-                },
-                active
-                  ? showBars
-                    ? styles.segmentInactive
-                    : styles.segmentActive
-                  : showBars
-                  ? styles.segmentActive
-                  : styles.segmentInactive,
+                styles.dotSegment,
+                i <= page ? styles.dotPast : styles.dotFuture,
               ]}
             />
-          );
-        })}
+          ))}
+        </View>
+      )}
+
+      {/* 2) 헤더 */}
+      {showUI && (
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <BackButton  />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle}>{title}</Text>
+            <Text style={styles.headerSub}>{author}</Text>
+          </View>
+          <View />
+        </View>
+      )}
+
+      {/* 3) 본문 */}
+      <View style={styles.body}>
+        <Text style={styles.bodyText}>
+          {`(Page ${page + 1})\n\n여기에 본문 텍스트가 들어갑니다.`}
+        </Text>
       </View>
 
-      {/* 상단 바 */}
-      {showBars && (
-        <View style={styles.topBar}>
-          <View style={styles.topBarRow}>
-            <Image source={{ uri: BOOK_THUMBNAIL }} style={styles.thumbnail} />
-            <View style={styles.titleArea}>
-              <Text style={styles.bookTitle}>{BOOK_TITLE}</Text>
-              <Text style={styles.bookAuthor}>{BOOK_AUTHOR}</Text>
+      {/* 4) 하단 고정 바 (사진과 동일하게, showUI 토글) */}
+      {showUI && (
+        <View style={styles.bottomBarFixed}>
+          <View style={styles.bottomBarRow}>
+            <View style={styles.sliderMainWrap}>
+              <View style={styles.sliderTopRow}>
+                <Text style={styles.bottomDate}>2025.04.21</Text>
+                <Text style={styles.bottomPage}>
+                  {page + 1} / {totalPages} 페이지
+                </Text>
+              </View>
+              <View style={styles.sliderTrackWrap}>
+                <View
+                  style={styles.sliderTrack}
+                  onLayout={e => setSliderWidth(e.nativeEvent.layout.width)}>
+                  <View style={[styles.sliderFill, {width: fillWidth}]} />
+                  {/* 슬라이더 thumb */}
+                  <View style={[styles.sliderThumb, {left: thumbLeft}]} />
+                </View>
+              </View>
+              {/* 슬라이더와 동일한 width의 버튼 Row */}
+              <View style={[styles.sliderButtonRow, {width: sliderWidth}]}>
+                <TouchableOpacity style={styles.sliderBtn} onPress={goPrev}>
+                  <LeftArrow width={18} height={18} />
+                  <Text style={styles.sliderBtnText}>이전 챕터</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.sliderBtn} onPress={goNext}>
+                  <Text style={styles.sliderBtnText}>다음 챕터</Text>
+                  <RightArrow width={18} height={18} />
+                </TouchableOpacity>
+              </View>
             </View>
-            <TouchableOpacity
-              style={styles.menuButton}
-              onPress={() => navigation.navigate('Main')}
-            >
-              <Text style={styles.menuText}>메뉴</Text>
-            </TouchableOpacity>
           </View>
         </View>
       )}
 
-      {/* 하단 바 */}
-      {showBars && (
-        <View style={styles.bottomBar}>
-          <TouchableOpacity style={styles.bottomButton}>
-            <Text style={styles.bottomButtonText}>하트</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.bottomButton}>
-            <Text style={styles.bottomButtonText}>스크랩</Text>
+      {/* 좋아요 플로팅 버튼 (showUI 토글) */}
+      {showUI && (
+        <View style={styles.floatingLikeWrap}>
+          <TouchableOpacity style={styles.heartBtn} onPress={toggleLike}>
+            {likedPages.includes(page) ? <FullHeart /> : <EmptyHeart />}
+            <Text style={styles.heartCount}>132</Text>
           </TouchableOpacity>
         </View>
       )}
-    </View>
-  );
-};
 
-export default ReadingScreen;
+      {/* 6) 3분할 터치 오버레이 (항상 렌더) */}
+      <View
+        style={[
+          styles.touchOverlay,
+          showUI
+            ? {top: HEADER_HEIGHT, bottom: FOOTER_HEIGHT}
+            : {top: 0, bottom: 0},
+        ]}>
+        {/* 이전 */}
+        <TouchableOpacity style={styles.touchArea} onPress={goPrev} />
+        {/* UI 토글 */}
+        <TouchableOpacity
+          style={styles.touchArea}
+          onPress={() => setShowUI(v => !v)}
+        />
+        {/* 다음 */}
+        <TouchableOpacity style={styles.touchArea} onPress={goNext} />
+      </View>
+    </SafeAreaView>
+  );
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFF',
+  flex: {flex: 1, backgroundColor: '#FFF'},
+
+  dotBar: {
+    flexDirection: 'row',
+    height: 2,
+    marginHorizontal: 8,
+    marginTop: 8,
   },
-  pageContainer: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
-    padding: 24,
-    justifyContent: 'center',
-  },
-  pageText: {
-    fontSize: 18,
-    lineHeight: 28,
-    color: '#333',
-  },
-  topBar: {
+  dotSegment: {flex: 1, marginHorizontal: 1},
+  dotPast: {backgroundColor: '#666'},
+  dotFuture: {backgroundColor: '#DDD'},
+
+  header: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: 140,
-    backgroundColor: 'black',
-    justifyContent: 'center',
-    paddingTop: 50,
-  },
-  topBarRow: {
+    height: 160,
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 16,
+    paddingHorizontal: 10,
+    backgroundColor: '#FFF',
+    zIndex: 300,
   },
-  thumbnail: {
-    width: 40,
-    height: 40,
-    borderRadius: 4,
-    marginRight: 12,
+  headerCenter: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    alignSelf: 'center',
   },
-  titleArea: {
-    flex: 1,
-  },
-  bookTitle: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  bookAuthor: {
-    color: '#FFF',
+  headerTitle: {
     fontSize: 14,
-    marginTop: 2,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    lineHeight: 22,
   },
-  menuButton: {
-    padding: 8,
+  headerSub: {
+    fontSize: 12,
+    color: '#757575',
+    fontWeight: '500',
+    lineHeight: 22,
   },
-  menuText: {
-    color: '#FFF',
-    fontSize: 16,
+  body: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+    paddingTop: 0,
   },
-  progressContainer: {
+  bodyText: {fontSize: 18, lineHeight: 26, color: '#000', fontWeight: '400'},
+
+  bottomBarFixed: {
     position: 'absolute',
-    top: 135,
     left: 0,
     right: 0,
-    height: 3,
+    bottom: 0,
+    backgroundColor: '#E8EBED',
+    paddingTop: 10,
+    paddingBottom: 25,
+    paddingHorizontal: 20,
+    zIndex: 10,
+  },
+  bottomBarRow: {
     flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  bottomDate: {
+    fontSize: 12,
+    color: '#757575',
+    opacity: 0.8,
+    lineHeight: 22,
+  },
+  sliderMainWrap: {
+    flex: 1,
+    marginHorizontal: 8,
+    alignItems: 'center',
+  },
+  sliderTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 4,
+  },
+  sliderTrackWrap: {
+    width: '100%',
+    height: 24,
+    justifyContent: 'center',
+  },
+  sliderTrack: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    position: 'relative',
+  },
+  sliderFill: {
+    height: '100%',
+    backgroundColor: '#00B1A7',
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    borderRadius: 8,
+  },
+  sliderThumb: {
+    position: 'absolute',
+    top: -5.5,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#FFF',
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  bottomPage: {
+    fontSize: 12,
+    color: '#1A1A1A',
+    opacity: 0.8,
+    lineHeight: 22,
+  },
+  heartWrap: {
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+  heartBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 100,
+    backgroundColor: '#00B1A7',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1000,
+    marginBottom: 0,
   },
-  segment: {
-    height: '100%',
-    borderRadius: 2,
+  heartCount: {
+    fontSize: 11,
+    color: '#FFF',
+    fontWeight: '600',
+    lineHeight: 16,
   },
-  segmentActive: {
-    backgroundColor: '#333',
+  bottomNavRow: {
+    flexDirection: 'row',
+    width: 360,
+    justifyContent: 'space-between',
   },
-  segmentInactive: {
-    backgroundColor: '#ccc',
+  bottomNavText: {
+    fontSize: 12,
+    color: '#1A1A1A',
+    opacity: 0.8,
+    fontWeight: '500',
+    lineHeight: 22,
   },
-  bottomBar: {
+  touchOverlay: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
     right: 0,
-    height: 120,
-    backgroundColor: 'black',
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
+  },
+  touchArea: {flex: 1},
+
+  floatingLikeWrap: {
+    position: 'absolute',
+    right: 23,
+    bottom: 145,
     alignItems: 'center',
-    paddingBottom: 50,
+    zIndex: 20,
   },
-  bottomButton: {
-    padding: 8,
+  sliderButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+    alignSelf: 'center',
   },
-  bottomButtonText: {
-    color: '#FFF',
-    fontSize: 16,
+  sliderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sliderBtnText: {
+    fontSize: 12,
+    color: '#757575',
+    marginHorizontal: 4,
+    fontWeight: '500',
   },
 });
