@@ -16,7 +16,7 @@ import MyPageTabActiveIcon from './src/assets/my-page-tab-active.svg';
 
 import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
-import GoalScreen from './src/screens/GoalScreen';
+import SearchScreen from './src/screens/SearchScreen';
 import BookDetailScreen from './src/screens/BookDetailScreen';
 import DiscoverScreen from './src/screens/DiscoverScreen';
 import DiscoveryDetailScreen from './src/screens/DiscoverDetailScreen';
@@ -40,7 +40,7 @@ export type RootStackParamList = {
     title: string;
     author: string;
   };
-  Goal: undefined;
+  Search: undefined;
   BookDetail: {
     // BookDetailScreen으로 넘길 데이터 구조
     bookId: string;
@@ -109,7 +109,7 @@ function MainTabNavigator() {
       />
       <Tab.Screen
         name="Goal"
-        component={GoalScreen}
+        component={SearchScreen}
         options={{
           title: '검색',
           tabBarIcon: ({focused}) =>
