@@ -7,17 +7,24 @@ import {
   Image,
   TouchableOpacity,
   Animated,
+  Pressable,
+  ScrollView,
+  Modal,
+  FlatList,
 } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import LinearGradient from 'react-native-linear-gradient';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../App';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
-
+import FireIcon from '../assets/fire-icon.svg';
+import InfoIcon from '../assets/info-icon.svg';
 import EmptyBookmark from '../assets/empty-bookmark.svg';
 import FullBookmark from '../assets/full-bookmark.svg';
+import RankOneIcon from '../assets/rank-one-icon.svg';
+import RankTwoIcon from '../assets/rank-two-icon.svg';
+import RankThreeIcon from '../assets/rank-three-icon.svg';
 
 type DiscoveryNavProp = StackNavigationProp<
   RootStackParamList,
@@ -25,15 +32,15 @@ type DiscoveryNavProp = StackNavigationProp<
 >;
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window');
-const TOP_HEADER_HEIGHT = 80;
+const TOP_HEADER_HEIGHT = 48;
 const BOTTOM_TAB_HEIGHT = 105;
 const availableHeight = SCREEN_HEIGHT - (TOP_HEADER_HEIGHT + BOTTOM_TAB_HEIGHT);
 
-const ITEM_SPACING = 25;
+const ITEM_SPACING = 16;
 
-// 카드 크기
-const CARD_WIDTH = 312;
-const CARD_HEIGHT = 500;
+// 카드 크기 (이미지 기준)
+const CARD_WIDTH = 332;
+const CARD_HEIGHT = 516;
 
 // 예시 데이터
 const recommendedBooks = [
@@ -63,18 +70,202 @@ const recommendedBooks = [
   },
 ];
 
+// 랭킹 mock 데이터
+const rankingBooks = [
+  {
+    id: '1',
+    title: '도널드 노먼의 사용자 중심 디자인',
+    author: '도널드 노먼',
+    cover: 'https://example.com/rank1.png',
+    views: 600,
+  },
+  {
+    id: '2',
+    title: '도널드 노먼의 사용자 중심 디자인',
+    author: '도널드 노먼',
+    cover: 'https://example.com/rank2.png',
+    views: 500,
+  },
+  {
+    id: '3',
+    title: '도널드 노먼의 사용자 중심 디자인',
+    author: '도널드 노먼',
+    cover: 'https://example.com/rank3.png',
+    views: 300,
+  },
+  {
+    id: '4',
+    title: '도널드 노먼의 사용자 중심 디자인',
+    author: '도널드 노먼',
+    cover: 'https://example.com/rank4.png',
+    views: 100,
+  },
+  {
+    id: '5',
+    title: '도널드 노먼의 사용자 중심 디자인',
+    author: '도널드 노먼',
+    cover: 'https://example.com/rank5.png',
+    views: 100,
+  },
+];
+
+// 북마크 mock 데이터 (사진 속 디자인과 동일하게 6개)
+const bookmarkBooks = [
+  {
+    id: '1',
+    title: '날개',
+    author: '이상',
+    cover:
+      'https://user-images.githubusercontent.com/14071105/273264728-2e599b2e-2cce-4e7e-8e2e-2e7e8e2e7e8e.png',
+  },
+  {
+    id: '2',
+    title: '날개',
+    author: '이상',
+    cover:
+      'https://user-images.githubusercontent.com/14071105/273264728-2e599b2e-2cce-4e7e-8e2e-2e7e8e2e7e8e.png',
+  },
+  {
+    id: '3',
+    title: '날개',
+    author: '이상',
+    cover:
+      'https://user-images.githubusercontent.com/14071105/273264728-2e599b2e-2cce-4e7e-8e2e-2e7e8e2e7e8e.png',
+  },
+  {
+    id: '4',
+    title: '날개',
+    author: '이상',
+    cover:
+      'https://user-images.githubusercontent.com/14071105/273264728-2e599b2e-2cce-4e7e-8e2e-2e7e8e2e7e8e.png',
+  },
+  {
+    id: '5',
+    title: '날개',
+    author: '이상',
+    cover:
+      'https://user-images.githubusercontent.com/14071105/273264728-2e599b2e-2cce-4e7e-8e2e-2e7e8e2e7e8e.png',
+  },
+  {
+    id: '6',
+    title: '날개',
+    author: '이상',
+    cover:
+      'https://user-images.githubusercontent.com/14071105/273264728-2e599b2e-2cce-4e7e-8e2e-2e7e8e2e7e8e.png',
+  },
+  {
+    id: '7',
+    title: '날개',
+    author: '이상',
+    cover:
+      'https://user-images.githubusercontent.com/14071105/273264728-2e599b2e-2cce-4e7e-8e2e-2e7e8e2e7e8e.png',
+  },
+  {
+    id: '8',
+    title: '날개',
+    author: '이상',
+    cover:
+      'https://user-images.githubusercontent.com/14071105/273264728-2e599b2e-2cce-4e7e-8e2e-2e7e8e2e7e8e.png',
+  },
+  {
+    id: '9',
+    title: '날개',
+    author: '이상',
+    cover:
+      'https://user-images.githubusercontent.com/14071105/273264728-2e599b2e-2cce-4e7e-8e2e-2e7e8e2e7e8e.png',
+  },
+  {
+    id: '10',
+    title: '날개',
+    author: '이상',
+    cover:
+      'https://user-images.githubusercontent.com/14071105/273264728-2e599b2e-2cce-4e7e-8e2e-2e7e8e2e7e8e.png',
+  },
+  {
+    id: '11',
+    title: '날개',
+    author: '이상',
+    cover:
+      'https://user-images.githubusercontent.com/14071105/273264728-2e599b2e-2cce-4e7e-8e2e-2e7e8e2e7e8e.png',
+  },
+];
+
 const DiscoveryScreen: React.FC = () => {
   const navigation = useNavigation<DiscoveryNavProp>();
 
-  // 상단 탭 상태: 'recommendation' | 'archive'
-  const [activeTab, setActiveTab] = useState<'recommendation' | 'archive'>(
-    'recommendation',
-  );
+  // 상단 탭 상태: 'recommendation' | 'ranking' | 'bookmark'
+  const [activeTab, setActiveTab] = useState<
+    'recommendation' | 'ranking' | 'bookmark'
+  >('recommendation');
 
   // 캐러셀 현재 페이지 인덱스
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // 캐러셀에 그려질 카드 아이템
+  // DiscoverDetailScreen에서 사용한 모달 옵션 복사
+  const CHALLENGE_OPTIONS = [
+    {
+      key: 'week',
+      label: '일주일 동안 읽기',
+      challenge: true,
+      desc: '하루당 6 페이지',
+    },
+    {
+      key: 'month',
+      label: '4주 동안 읽기',
+      challenge: true,
+      desc: '하루당 2 페이지',
+    },
+    {key: 'free', label: '시간 제한 없이 읽기', challenge: false, desc: ''},
+  ];
+
+  // 카드별 preview 상태 관리
+  const [previewStates, setPreviewStates] = useState<{[id: string]: boolean}>(
+    {},
+  );
+
+  const currentBook = recommendedBooks.slice().reverse()[currentIndex];
+
+  // 책 읽기 모달 상태 (DiscoverDetailScreen과 동일)
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selected, setSelected] = useState('');
+  const challengeCount = 1; // 예시
+  const challengeMax = 5;
+  const selectedOption = CHALLENGE_OPTIONS.find(opt => opt.key === selected);
+
+  // 북마크 상태 관리
+  const [bookmarkedMap, setBookmarkedMap] = useState<{[id: string]: boolean}>(
+    {},
+  );
+
+  // 북마크된 책 목록 가져오기
+  const getBookmarkedBooks = () =>
+    recommendedBooks.filter(b => bookmarkedMap[b.id]);
+
+  // 북마크 토글 함수
+  const toggleBookmark = (bookId: string) => {
+    setBookmarkedMap(prev => ({
+      ...prev,
+      [bookId]: !prev[bookId],
+    }));
+  };
+
+  // 이미지 로드 실패 상태 관리 (랭킹/북마크 공용)
+  const [imageErrorMap, setImageErrorMap] = useState<{[id: string]: boolean}>(
+    {},
+  );
+
+  // 북마크 토글 상태 관리 (id: boolean)
+  const [bookmarkToggles, setBookmarkToggles] = useState(() => {
+    const initial: {[id: string]: boolean} = {};
+    bookmarkBooks.forEach(b => {
+      initial[b.id] = true;
+    });
+    return initial;
+  });
+  const handleToggle = (id: string) => {
+    setBookmarkToggles(prev => ({...prev, [id]: !prev[id]}));
+  };
+
   const renderItem = ({
     item,
     index,
@@ -83,77 +274,69 @@ const DiscoveryScreen: React.FC = () => {
     index: number;
   }) => {
     const isActive = index === currentIndex;
+    const scale = useRef(new Animated.Value(isActive ? 1 : 0.9)).current;
     const containerOpacity = useRef(
-      new Animated.Value(isActive ? 1 : 0.6),
+      new Animated.Value(isActive ? 1 : 1),
     ).current;
-
-    // 포커스된 카드만 불투명도 1, 나머지는 0.6
     useEffect(() => {
+      Animated.timing(scale, {
+        toValue: isActive ? 1 : 0.96,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
       Animated.timing(containerOpacity, {
-        toValue: isActive ? 1 : 0.6,
+        toValue: isActive ? 1 : 1,
         duration: 200,
         useNativeDriver: true,
       }).start();
     }, [isActive]);
-
-    // 북마크 토글 상태
-    const [bookmarked, setBookmarked] = useState(false);
-
-    const onPressCard = () => {
-      navigation.navigate('DiscoveryDetail', {
-        id: item.id,
-        title: item.title,
-        author: item.author,
-        cover: item.cover,
-        firstLine: item.firstLine,
-        description: item.firstParagraph,
-      });
-    };
-
-    const onPressBookmark = () => {
-      setBookmarked(!bookmarked);
-    };
-
     return (
-      // 카드와 다음 카드 사이에 25px 간격을 주기 위해 View로 감싸기
-      <View style={{marginBottom: ITEM_SPACING}}>
-        <TouchableOpacity activeOpacity={0.9} onPress={onPressCard}>
-          <Animated.View
-            style={[styles.cardContainer, {opacity: containerOpacity}]}>
-            <Image source={{uri: item.cover}} style={styles.coverImage} />
-            <TouchableOpacity
-              style={styles.bookmarkButton}
-              onPress={onPressBookmark}
-              activeOpacity={0.7}>
-              {bookmarked ? <FullBookmark /> : <EmptyBookmark />}
-            </TouchableOpacity>
-
-            {/* 오버레이 영역 */}
-            <View style={styles.overlay}>
-              {/* 카테고리 태그 예시 */}
+      <TouchableOpacity
+        activeOpacity={0.95}
+        onPress={() =>
+          setPreviewStates(prev => ({...prev, [item.id]: !prev[item.id]}))
+        }
+        style={{borderRadius: 40, overflow: 'hidden'}}>
+        <Animated.View style={[styles.cardContainer, {transform: [{scale}]}]}>
+          <View style={styles.coverPlaceholder} />
+          {/* 카드 하단 오버레이: 텍스트만 */}
+          <View style={styles.cardOverlay}>
+            <View style={styles.cardOverlayInner}>
               <View style={styles.tagBadge}>
-                <Text style={styles.tagBadgeText}>문학</Text>
+                <Text style={styles.tagBadgeText}>소설</Text>
               </View>
-              <Text style={styles.titleText}>{item.title}</Text>
-              <Text style={styles.authorText}>{item.author}</Text>
-              <Text style={styles.firstLineText}>{item.firstLine}</Text>
+              <Text style={styles.cardTitle}>
+                {item.title}{' '}
+                <Text style={styles.cardAuthor}>| {item.author}</Text>
+              </Text>
+              <Text style={styles.cardFirstLine}>{item.firstLine}</Text>
             </View>
-          </Animated.View>
-        </TouchableOpacity>
-      </View>
+          </View>
+          {/* 본문 미리보기 오버레이 */}
+          {previewStates[item.id] && (
+            <View
+              style={styles.previewOverlayTouchable}
+              pointerEvents="box-none">
+              <ScrollView
+                style={styles.previewOverlayScroll}
+                contentContainerStyle={styles.previewOverlayContent}
+                showsVerticalScrollIndicator={false}>
+                <Text style={styles.previewOverlayText}>
+                  {item.firstParagraph || item.firstLine}
+                </Text>
+              </ScrollView>
+            </View>
+          )}
+        </Animated.View>
+      </TouchableOpacity>
     );
   };
 
   return (
     <GestureHandlerRootView style={{flex: 1}}>
-      <LinearGradient
-        colors={['#001B1A', '#004743', '#00B1A7']}
-        locations={[0, 0.5, 1]}
-        start={{x: 0, y: 0}}
-        end={{x: 0, y: 1}}
-        style={styles.gradientBackground}>
-        <SafeAreaView style={styles.safeArea}>
-          {/* 상단 탭 (추천 | 보관함) */}
+      <View style={{flex: 1, backgroundColor: '#FFF'}}>
+        <SafeAreaView style={[styles.safeArea, {flex: 1}]}>
+          {/* 상단 탭 (추천 | 랭킹 | 북마크) */}
           <View style={styles.tabContainer}>
             <TouchableOpacity onPress={() => setActiveTab('recommendation')}>
               <Text
@@ -164,52 +347,466 @@ const DiscoveryScreen: React.FC = () => {
                 추천
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setActiveTab('archive')}>
+            <View style={styles.tabBarDivider} />
+            <TouchableOpacity onPress={() => setActiveTab('ranking')}>
               <Text
                 style={[
                   styles.tabText,
-                  activeTab === 'archive' && styles.activeTabText,
+                  activeTab === 'ranking' && styles.activeTabText,
                 ]}>
-                보관함
+                랭킹
+              </Text>
+            </TouchableOpacity>
+            <View style={styles.tabBarDivider} />
+            <TouchableOpacity onPress={() => setActiveTab('bookmark')}>
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === 'bookmark' && styles.activeTabText,
+                ]}>
+                북마크
               </Text>
             </TouchableOpacity>
           </View>
 
           {/* 탭별 화면 */}
           {activeTab === 'recommendation' ? (
-            // 추천 탭: 캐러셀
-            <View style={styles.carouselContainer}>
-              <Carousel
-                data={recommendedBooks}
-                renderItem={renderItem}
-                // 각 페이지의 높이를 카드 높이 + 간격으로 설정
-                width={CARD_WIDTH}
-                height={CARD_HEIGHT + ITEM_SPACING}
-                vertical
-                style={{height: availableHeight}}
-                containerStyle={{
-                  alignItems: 'center',
-                  justifyContent: 'center',
+            // 추천 탭: 카드 + 하단 고정 버튼
+            <View style={{backgroundColor: '#FFF', height: availableHeight}}>
+              <View style={styles.carouselContainer}>
+                <Carousel
+                  data={recommendedBooks.slice().reverse()}
+                  renderItem={renderItem}
+                  width={CARD_WIDTH}
+                  height={CARD_HEIGHT}
+                  style={{height: CARD_HEIGHT, marginTop: 8, borderRadius: 40}}
+                  containerStyle={{
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  pagingEnabled
+                  snapEnabled
+                  scrollAnimationDuration={350}
+                  onSnapToItem={index => setCurrentIndex(index)}
+                  loop={false}
+                  mode="horizontal-stack"
+                  modeConfig={{
+                    snapDirection: 'right',
+                    stackInterval: CARD_WIDTH * 2.5,
+                    scaleInterval: 90,
+                  }}
+                />
+                {/* 하단 고정 버튼 영역 */}
+                <View style={styles.fixedButtonRow}>
+                  <TouchableOpacity
+                    style={styles.cardIconBtn}
+                    onPress={() => {
+                      if (currentBook) {
+                        toggleBookmark(currentBook.id);
+                      }
+                    }}
+                    activeOpacity={0.7}>
+                    {currentBook && bookmarkedMap[currentBook.id] ? (
+                      <FullBookmark />
+                    ) : (
+                      <EmptyBookmark />
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.cardInfoBtn}
+                    activeOpacity={0.7}>
+                    <InfoIcon />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.cardReadBtn}
+                    onPress={() => setModalVisible(true)}>
+                    <Text style={styles.cardReadBtnText}>▶ 책 읽기</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          ) : activeTab === 'ranking' ? (
+            <View style={{height: SCREEN_HEIGHT}}>
+              <ScrollView
+                style={{flex: 1}}
+                contentContainerStyle={{
+                  paddingTop: 14,
+                  paddingLeft: 14,
+                  paddingRight: 14,
+                  paddingBottom: 250,
+                  backgroundColor: '#FFF',
                 }}
-                pagingEnabled
-                snapEnabled
-                scrollAnimationDuration={300}
-                onSnapToItem={index => setCurrentIndex(index)}
-              />
+                showsVerticalScrollIndicator={true}>
+                {rankingBooks.map((item, index) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.rankCard}
+                    activeOpacity={0.9}
+                    onPress={() => {}}>
+                    <View style={styles.rankCoverWrapper}>
+                      {!item.cover || imageErrorMap[item.id] ? (
+                        <View style={styles.rankCover} />
+                      ) : (
+                        <Image
+                          source={{uri: item.cover}}
+                          style={styles.rankCover}
+                          onError={() =>
+                            setImageErrorMap(prev => ({
+                              ...prev,
+                              [item.id]: true,
+                            }))
+                          }
+                        />
+                      )}
+                      {index === 0 && (
+                        <View style={styles.rankBadgeAbsolute}>
+                          <RankOneIcon width={28} height={28} />
+                        </View>
+                      )}
+                      {index === 1 && (
+                        <View style={styles.rankBadgeAbsolute}>
+                          <RankTwoIcon width={28} height={28} />
+                        </View>
+                      )}
+                      {index === 2 && (
+                        <View style={styles.rankBadgeAbsolute}>
+                          <RankThreeIcon width={28} height={28} />
+                        </View>
+                      )}
+                    </View>
+                    <View style={styles.rankInfoArea}>
+                      <Text style={styles.rankTitle}>{item.title}</Text>
+                      <Text style={styles.rankAuthor}>{item.author}</Text>
+                      <Text style={styles.rankViews}>조회수 {item.views}+</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </View>
           ) : (
-            // 보관함 탭: 추후 개발용 (Placeholder)
-            <View style={styles.archiveContainer}>
-              <Text style={{color: '#fff', fontSize: 16}}>
-                보관함 화면은 추후 개발 예정!
-              </Text>
+            <View style={{height: SCREEN_HEIGHT}}>
+              <ScrollView
+                style={{flex: 1}}
+                contentContainerStyle={{
+                  paddingTop: 14,
+                  paddingLeft: 14,
+                  paddingRight: 14,
+                  paddingBottom: 200,
+                  backgroundColor: '#FFF',
+                }}
+                showsVerticalScrollIndicator={false}>
+                {bookmarkBooks.length === 0 ? (
+                  <Text
+                    style={{
+                      textAlign: 'center',
+                      color: '#BDBDBD',
+                      marginTop: 40,
+                    }}>
+                    북마크된 책이 없습니다.
+                  </Text>
+                ) : (
+                  (() => {
+                    const rows = [];
+                    for (let i = 0; i < bookmarkBooks.length; i += 3) {
+                      rows.push(bookmarkBooks.slice(i, i + 3));
+                    }
+                    return rows.map((row, rowIdx) => (
+                      <View
+                        key={rowIdx}
+                        style={{
+                          flexDirection: 'row',
+                          gap: 10,
+                          marginBottom: 24,
+                          paddingHorizontal: 16,
+                          justifyContent: 'flex-start',
+                        }}>
+                        {row.map(item => (
+                          <View key={item.id} style={styles.bookmarkGridCard}>
+                            <View style={styles.bookmarkGridCoverWrapper}>
+                              {!item.cover || imageErrorMap[item.id] ? (
+                                <View style={styles.bookmarkGridCover} />
+                              ) : (
+                                <Image
+                                  source={{uri: item.cover}}
+                                  style={styles.bookmarkGridCover}
+                                  onError={() =>
+                                    setImageErrorMap(prev => ({
+                                      ...prev,
+                                      [item.id]: true,
+                                    }))
+                                  }
+                                />
+                              )}
+                              <TouchableOpacity
+                                style={styles.bookmarkGridIcon}
+                                onPress={() => handleToggle(item.id)}
+                                activeOpacity={0.7}>
+                                {bookmarkToggles[item.id] ? (
+                                  <FullBookmark />
+                                ) : (
+                                  <EmptyBookmark />
+                                )}
+                              </TouchableOpacity>
+                            </View>
+                            <Text style={styles.bookmarkGridTitle}>
+                              {item.title}
+                            </Text>
+                            <Text style={styles.bookmarkGridAuthor}>
+                              {item.author}
+                            </Text>
+                          </View>
+                        ))}
+                        {/* 빈 칸 채우기 */}
+                        {row.length < 3 &&
+                          Array.from({length: 3 - row.length}).map((_, idx) => (
+                            <View key={`empty-${idx}`} style={{flex: 1}} />
+                          ))}
+                      </View>
+                    ));
+                  })()
+                )}
+              </ScrollView>
             </View>
           )}
-
-          {/* 하단 탭바 공간 대체 */}
-          <View style={{height: BOTTOM_TAB_HEIGHT}} />
         </SafeAreaView>
-      </LinearGradient>
+      </View>
+
+      {/* 책 읽기 모달 (DiscoverDetailScreen과 동일) */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}>
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.18)',
+            justifyContent: 'flex-end',
+          }}
+          onPress={() => setModalVisible(false)}>
+          <View
+            style={{
+              backgroundColor: '#fff',
+              borderTopLeftRadius: 16,
+              borderTopRightRadius: 16,
+              paddingHorizontal: 18,
+              paddingTop: 12,
+              paddingBottom: 32,
+              minHeight: 320,
+            }}>
+            <View
+              style={{
+                width: 48,
+                height: 5,
+                borderRadius: 3,
+                backgroundColor: '#E0E0E0',
+                alignSelf: 'center',
+                marginBottom: 18,
+              }}
+            />
+            {CHALLENGE_OPTIONS.map(opt => {
+              const isSelected = selected === opt.key;
+              const isChallenge = opt.challenge;
+              const showDesc = isSelected && !!opt.desc && isChallenge;
+              return (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[
+                    {
+                      height: 44,
+                      width: '100%',
+                      borderWidth: 1,
+                      borderColor: '#E0E0E0',
+                      borderRadius: 8,
+                      marginBottom: 10,
+                      backgroundColor: '#fff',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      padding: 0,
+                    },
+                    isSelected && isChallenge && {height: 88},
+                    isSelected && {borderColor: '#1A1A1A'},
+                  ]}
+                  onPress={() => setSelected(opt.key)}
+                  activeOpacity={0.8}>
+                  {showDesc ? (
+                    <>
+                      <View
+                        style={{
+                          height: 44,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          paddingHorizontal: 16,
+                        }}>
+                        <Text
+                          style={{
+                            color: isSelected ? '#1A1A1A' : '#757575',
+                            fontSize: 14,
+                            lineHeight: 22,
+                          }}>
+                          {opt.label}
+                        </Text>
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            marginLeft: 8,
+                          }}>
+                          <FireIcon
+                            width={18}
+                            height={18}
+                            style={{marginRight: 2}}
+                          />
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              color: '#757575',
+                              fontWeight: '600',
+                              lineHeight: 22,
+                              marginLeft: 2,
+                            }}>
+                            챌린지
+                          </Text>
+                        </View>
+                      </View>
+                      <View
+                        style={{
+                          width: '95%',
+                          height: 1,
+                          backgroundColor: '#E0E0E0',
+                          alignSelf: 'center',
+                        }}
+                      />
+                      <View
+                        style={{
+                          height: 44,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          paddingHorizontal: 16,
+                        }}>
+                        <Text
+                          style={{
+                            fontSize: 14,
+                            color: '#757575',
+                            fontWeight: '400',
+                            lineHeight: 22,
+                            paddingLeft: 2,
+                          }}>
+                          {opt.desc}
+                        </Text>
+                      </View>
+                    </>
+                  ) : (
+                    <View
+                      style={{
+                        height: 44,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingHorizontal: 16,
+                      }}>
+                      <Text
+                        style={{
+                          color: isSelected ? '#1A1A1A' : '#757575',
+                          fontWeight: isSelected ? '700' : '600',
+                          fontSize: 16,
+                          lineHeight: 22,
+                        }}>
+                        {opt.label}
+                      </Text>
+                      {isChallenge && (
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            marginLeft: 8,
+                          }}>
+                          <FireIcon
+                            width={18}
+                            height={18}
+                            style={{marginRight: 2}}
+                          />
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              color: '#757575',
+                              fontWeight: '600',
+                              lineHeight: 22,
+                              marginLeft: 2,
+                            }}>
+                            챌린지
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+            {/* 챌린지 횟수 + 읽기 버튼 한 줄 */}
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'center',
+                marginTop: 30,
+                marginBottom: 18,
+              }}>
+              <View style={{alignItems: 'flex-start'}}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: '#757575',
+                    fontWeight: '500',
+                    lineHeight: 22,
+                    marginRight: 8,
+                  }}>
+                  챌린지 횟수{' '}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: '#1A1A1A',
+                    fontWeight: '600',
+                    lineHeight: 23,
+                  }}>
+                  <Text style={{color: '#00B1A7', fontWeight: '600'}}>
+                    {challengeCount}
+                  </Text>
+                  /{challengeMax}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={{
+                  height: 50,
+                  width: '100%',
+                  borderRadius: 10,
+                  backgroundColor: selected ? '#00B1A7' : '#BDBDBD',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flex: 1,
+                }}
+                disabled={!selected}
+                onPress={() => selected && setModalVisible(false)}>
+                <Text
+                  style={{
+                    color: '#fff',
+                    fontSize: 18,
+                    fontWeight:
+                      selectedOption && selectedOption.challenge
+                        ? '600'
+                        : '500',
+                    opacity: selected ? 1 : 0.5,
+                  }}>
+                  {selectedOption && selectedOption.challenge
+                    ? '챌린지 읽기 시작'
+                    : '읽기 시작'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
     </GestureHandlerRootView>
   );
 };
@@ -222,24 +819,31 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#FFF',
   },
   // 상단 탭 영역
   tabContainer: {
-    height: TOP_HEADER_HEIGHT,
+    height: 48,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 14,
+    backgroundColor: '#FFF',
   },
   tabText: {
-    fontSize: 18,
-    fontWeight: '400',
-    color: 'rgba(255,255,255,0.5)',
-    marginRight: 24,
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 23,
+    color: '#BDBDBD',
+    letterSpacing: -0.3,
   },
   activeTabText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
+    color: '#1A1A1A',
+  },
+  tabBarDivider: {
+    width: 1,
+    height: 12,
+    backgroundColor: '#E0E0E0',
+    marginHorizontal: 10,
   },
   // 보관함 탭 Placeholder
   archiveContainer: {
@@ -248,19 +852,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   carouselContainer: {
-    height: availableHeight,
+    height: 520,
+    backgroundColor: '#FFF',
   },
   cardContainer: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
-    borderRadius: 24,
+    borderRadius: 40,
     overflow: 'hidden',
-    backgroundColor: '#333',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 5},
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
+    backgroundColor: 'black',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   coverImage: {
     position: 'absolute',
@@ -268,50 +870,280 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
   },
-  bookmarkButton: {
+  coverPlaceholder: {
     position: 'absolute',
-    top: 16,
-    right: 16,
-    zIndex: 10,
+    width: 332,
+    height: 516,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 40,
   },
-  overlay: {
+  cardOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 30,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+  },
+  cardOverlayInner: {
+    // 카드 오버레이 내부 여백 및 정렬
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#fff',
+    marginBottom: 12,
+    lineHeight: 23,
+  },
+  cardAuthor: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#fff',
+    marginBottom: 12,
+    lineHeight: 23,
+  },
+  cardFirstLine: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 0,
+    lineHeight: 28,
+  },
+  cardBottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 18,
+    gap: 8,
+  },
+  cardIconBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 0,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  cardInfoBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 0,
+    marginRight: 0,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  cardInfoIcon: {
+    color: '#00B1A7',
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  cardReadBtn: {
     flex: 1,
-    padding: 24,
-    justifyContent: 'flex-end',
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: '#4EC6B6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+    marginRight: 0,
+  },
+  cardReadBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   tagBadge: {
-    width: 45,
+    width: 33,
     height: 24,
-    backgroundColor: '#FFF',
-    borderRadius: 1000,
+    backgroundColor: '#E5E5E5',
+    borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 12,
   },
   tagBadgeText: {
     fontSize: 12,
-    fontWeight: '500',
-  },
-  titleText: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#FFF',
-    marginBottom: 3,
-    lineHeight: 20,
-  },
-  authorText: {
-    fontSize: 12,
-    fontWeight: '400',
-    color: '#FFF',
-    opacity: 0.7,
-    marginBottom: 10,
-    lineHeight: 20,
-  },
-  firstLineText: {
-    fontSize: 24,
     fontWeight: '700',
-    color: '#FFF',
+    color: 'rgba(0, 0, 0, 0.60)',
+    lineHeight: 18,
+  },
+  cardPreviewOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.70)',
+    borderRadius: 40,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 24,
+  },
+  cardPreviewScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-start',
+  },
+  cardPreviewText: {
+    color: '#fff',
+    fontSize: 16,
+    lineHeight: 25,
+    fontWeight: '400',
+  },
+  fixedButtonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    gap: 10,
+    width: '100%',
+    alignSelf: 'center',
+    backgroundColor: '#FFF',
+    marginTop: 30,
+  },
+  previewOverlayTouchable: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.70)',
+    borderRadius: 28,
+    justifyContent: 'flex-start',
+    alignItems: 'stretch',
+    overflow: 'hidden',
+  },
+  previewOverlayScroll: {
+    flex: 1,
+    padding: 24,
+  },
+  previewOverlayContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-start',
+  },
+  previewOverlayText: {
+    color: '#fff',
+    fontSize: 16,
+    lineHeight: 26,
+    fontWeight: '400',
+  },
+  // 랭킹 카드
+  rankCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 12,
     marginBottom: 10,
-    lineHeight: 30,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+    height: 124,
+  },
+  rankCoverWrapper: {
+    width: 74,
+    height: 100,
+    borderRadius: 6,
+    backgroundColor: '#E0E0E0',
+    marginRight: 10,
+    position: 'relative',
+    overflow: 'hidden',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+  },
+  rankCover: {
+    width: 74,
+    height: 100,
+    borderRadius: 6,
+    backgroundColor: '#E0E0E0',
+  },
+  rankBadgeAbsolute: {
+    position: 'absolute',
+    top: 2,
+    left: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+  rankInfoArea: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  rankTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000000',
+    lineHeight: 22,
+    overflow: 'hidden',
+  },
+  rankAuthor: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#757575',
+    opacity: 0.8,
+    lineHeight: 22,
+  },
+  rankViews: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#757575',
+    opacity: 0.8,
+    lineHeight: 22,
+  },
+  // 북마크 그리드
+  bookmarkGridCard: {
+    width: 104,
+    height: 186,
+    backgroundColor: '#fff',
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  bookmarkGridCoverWrapper: {
+    width: 104,
+    height: 138,
+    borderRadius: 10,
+    backgroundColor: '#E0E0E0',
+    marginBottom: 4,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bookmarkGridCover: {
+    width: 104,
+    height: 138,
+    borderRadius: 10,
+    backgroundColor: '#E0E0E0',
+  },
+  bookmarkGridIcon: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    zIndex: 2,
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bookmarkGridTitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 22,
+    color: '#1A1A1A',
+  },
+  bookmarkGridAuthor: {
+    fontSize: 12,
+    fontWeight: '500',
+    lineHeight: 22,
+    color: '#757575',
   },
 });
