@@ -26,6 +26,7 @@ import ReadingProgressScreen from './src/screens/ReadingProgressScreen';
 import ChallengeListScreen from './src/screens/ChallengeListScreen';
 import ChallengeDetailScreen from './src/screens/ChallengeDetailScreen';
 import ReadingGoalScreen from './src/screens/ReadingGoalScreen';
+import ProfileEditScreen from './src/screens/ProfileEditScreen';
 
 // ----- 네비게이션 ParamList 타입 정의 -----
 export type RootStackParamList = {
@@ -70,6 +71,15 @@ export type RootStackParamList = {
     firstLine: string;
     description: string;
   };
+  CompleteList: undefined;
+  CompleteSave: {
+    id: string;
+    title: string;
+    author: string;
+    date: string;
+    cover: string;
+  };
+  ProfileEdit: undefined;
 };
 
 export type BottomTabParamList = {
@@ -166,6 +176,15 @@ const App = () => {
           name="ChallengeDetail"
           component={ChallengeDetailScreen}
         />
+        <Stack.Screen
+          name="CompleteList"
+          component={require('./src/screens/CompleteListScreen').default}
+        />
+        <Stack.Screen
+          name="CompleteSave"
+          component={require('./src/screens/CompleteSaveScreen').default}
+        />
+        <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

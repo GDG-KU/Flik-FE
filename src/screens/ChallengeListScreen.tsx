@@ -121,7 +121,6 @@ export default function ChallengeListScreen({navigation}: Props) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <BackButton />
         </TouchableOpacity>
-        <Text style={styles.title}>챌린지</Text>
         <View style={{width: 32}} />
       </View>
 
