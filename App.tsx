@@ -27,6 +27,10 @@ import ChallengeListScreen from './src/screens/ChallengeListScreen';
 import ChallengeDetailScreen from './src/screens/ChallengeDetailScreen';
 import ReadingGoalScreen from './src/screens/ReadingGoalScreen';
 import ProfileEditScreen from './src/screens/ProfileEditScreen';
+import SignUpScreen from './src/screens/SignUpScreen';
+import ProfileSetUpScreen from './src/screens/ProfileSetUpScreen';
+import PreferSetupScreen from './src/screens/PreferSetupScreen';
+import SignUpDoneScreen from './src/screens/SignUpDoneScreen';
 
 // ----- 네비게이션 ParamList 타입 정의 -----
 export type RootStackParamList = {
@@ -80,6 +84,10 @@ export type RootStackParamList = {
     cover: string;
   };
   ProfileEdit: undefined;
+  SignUp: undefined;
+  ProfileSetUp: undefined;
+  PreferSetup: undefined;
+  SignUpDone: undefined;
 };
 
 export type BottomTabParamList = {
@@ -158,6 +166,10 @@ const App = () => {
           headerShown: false,
         }}>
         <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="SignUp" component={SignUpScreen} />
+        <Stack.Screen name="ProfileSetUp" component={ProfileSetUpScreen} />
+        <Stack.Screen name="PreferSetup" component={PreferSetupScreen} />
+        <Stack.Screen name="SignUpDone" component={SignUpDoneScreen} />
         <Stack.Screen name="Main" component={MainTabNavigator} />
         <Stack.Screen name="Reading" component={ReadingScreen} />
         <Stack.Screen name="ReadingGoal" component={ReadingGoalScreen} />

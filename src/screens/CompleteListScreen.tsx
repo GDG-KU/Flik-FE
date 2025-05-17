@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
   SafeAreaView,
 } from 'react-native';
@@ -62,7 +61,7 @@ export default function CompleteListScreen() {
                   <Text style={styles.title}>{item.title}</Text>
                   <Text style={styles.author}>{item.author}</Text>
                   <View style={styles.bottomRow}>
-                    <Logo width={32} height={14} />
+                    <Logo width={26} height={12} />
                     <Text style={styles.date}>{item.date}</Text>
                   </View>
                 </TouchableOpacity>

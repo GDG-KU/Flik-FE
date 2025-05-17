@@ -10,7 +10,6 @@ import {
   Pressable,
   ScrollView,
   Modal,
-  FlatList,
 } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import {SafeAreaView} from 'react-native-safe-area-context';
