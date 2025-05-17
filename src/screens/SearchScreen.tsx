@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   TextInput,
-  FlatList,
   KeyboardAvoidingView,
   Platform,
   Keyboard,

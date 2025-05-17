@@ -177,7 +177,7 @@ const MyPageScreen: React.FC<Props> = () => {
                     justifyContent: 'space-between',
                     marginTop: 15,
                   }}>
-                  <Logo />
+                  <Logo width={26} height={12} />
                   <Text style={styles.finishedDate}>2025.05.10</Text>
                 </View>
               </View>

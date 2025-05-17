@@ -239,7 +239,7 @@ export default function CompleteSaveScreen() {
           {author}
         </Text>
         <View style={styles.bottomRow}>
-          <Logo width={32} height={14} />
+          <Logo width={26} height={12} />
           <Text
             style={[styles.date, cardColor === 'black' && {color: '#BDBDBD'}]}>
             {date}
